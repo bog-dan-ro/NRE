@@ -1,0 +1,13 @@
+set(APP_LDSCRIPT "default")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ld.conf")
+    set(APP_LDSCRIPT "root")
+endif()
+
+add_nre_app(vmmng
+    SOURCES
+        RunningVMList.cc
+        VMConfig.cc
+        VMMngService.cc
+        vmmng.cc
+    LDSCRIPT ${APP_LDSCRIPT}
+)

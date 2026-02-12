@@ -1,0 +1,10 @@
+add_nre_service(storage
+    SOURCES
+        ControllerMng.cc
+        HostAHCICtrl.cc
+        HostAHCIDevice.cc
+        HostATADevice.cc
+        HostATAPIDevice.cc
+        HostIDECtrl.cc
+        storage.cc
+)

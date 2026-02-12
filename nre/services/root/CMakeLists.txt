@@ -1,0 +1,10 @@
+add_nre_service(root
+    SOURCES
+        Admission.cc
+        Hypervisor.cc
+        Log.cc
+        PhysicalMemory.cc
+        SysInfoService.cc
+        VirtualMemory.cc
+        root.cc
+)
