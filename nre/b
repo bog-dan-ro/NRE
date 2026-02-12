@@ -57,9 +57,8 @@ help() {
     echo ""
     echo -n "This is a convenience script that is responsible for building everything (NOVA and NRE)"
     echo -n " and running the specified command afterwards. It does also support switching between"
-    echo -n " debug and release builds by changing the Makefile of NOVA accordingly (adjust"
-    echo -n " optimization level, ...). The most important environment variables that influence its"
-    echo " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
+    echo -n " debug and release builds via CMAKE_BUILD_TYPE. The most important environment variables"
+    echo -n " that influence its behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
     echo -n "You can also prevent the script from building everything by specifying -n or --no-build."
     echo -n " In this case, only the specified command is executed."
     echo ""
@@ -200,8 +199,20 @@ if $dobuild; then
         done
     )
 
-    # build userland
-    scons $opts || exit 1
+    # build userland with cmake
+    if [ ! -d "$build" ]; then
+        mkdir -p "$build"
+        cd "$build"
+        cmake -DCMAKE_BUILD_TYPE=$([ "$NRE_BUILD" = "debug" ] && echo "Debug" || echo "Release") \
+              -G "Unix Makefiles" \
+              ../.. || exit 1
+        cd ..
+    else
+        cd "$build"
+    fi
+
+    cmake --build . $opts || exit 1
+    cd $root
 
     if [ -d $novadir ]; then
         cd $novadir
@@ -222,7 +233,7 @@ if $dobuild; then
         fi
 
         # build NOVA
-        ARCH=$NRE_TARGET make $jobs || exit 1
+        ARCH=$NRE_TARGET make $opts || exit 1
 
         # copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
         if [ "$NRE_TARGET" = "x86_64" ]; then
@@ -248,14 +259,14 @@ fi
 # run the specified command, if any
 case "$cmd" in
     clean)
-        scons -c
-        ( cd $novadir/build && ARCH=$NRE_TARGET make clean )
+        rm -rf $build
+        ( cd $novadir && ARCH=$NRE_TARGET make clean )
         ;;
     distclean)
         rm -Rf build/* $novadir
         ;;
     prof=*)
-        $build/tools/conv/conv i586 log.txt $build/bin/apps/$binary > result.xml
+        $build/tools/conv log.txt $build/bin/apps/$binary > result.xml
         ;;
     bochs)
         mkdir -p $build/bin/boot/grub

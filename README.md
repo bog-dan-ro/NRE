@@ -17,25 +17,17 @@ Getting started:
 
 Please take the following steps:
 
-1.  Go into the directory cross/.
-2.  a) If you want to download a precompiled cross-compiler, execute
-    `download.sh <arch>`, where `<arch>` is either `x86_32` or `x86_64`.
-    It will download the compiler into `/opt/nre-cross-<arch>`. There are only
-    precompiled versions for certain host platforms, of course.  
-    b) Otherwise, execute `build.sh <arch>`, where `<arch>` is either `x86_32`
-    or `x86_64`. This builds the cross compiler. Thus, it will take a few
-    minutes :)
-3.  To checkout the submodules, please do a `git submodule init && git submodule update`
+1.  To checkout the submodules, please do a `git submodule init && git submodule update`
     in the root directory of the repository.
-4.  Before you continue, choose the target and build-type that you want to use:  
+2.  Before you continue, choose the target and build-type that you want to use:  
     `export NRE_TARGET=(x86_32|x86_64) NRE_BUILD=(debug|release)`
-5.  Go into the directory nre. You'll find the convenience-script b, which is
+3.  Go into the directory nre. You'll find the convenience-script b, which is
     responsible for building everything that needs to be build and executing
     the specified command. So, simply do a `./b` to build everything. It will
     build NOVA and, of course, build NRE as well. Please run `./b -h` to see
     the help of the script. For a quick start use `./b qemu boot/test` to run
     the test application in qemu.
-6.  To use `./b srv <script>`, you have to generate the novaboot-config by:  
+4.  To use `./b srv <script>`, you have to generate the novaboot-config by:  
     `./tools/novaboot --dump-config > ~/.novaboot`  
     You might want to adjust it afterwards
 
