@@ -75,7 +75,7 @@ public:
                 uint16_t _res;
                 uint8_t id;
                 uint8_t start_bus;
-                uint8_t path[];
+                uint8_t path[1];
             }*_elem;
         };
         size_t _size_left;
@@ -112,7 +112,7 @@ public:
                 uint8_t _res;
                 uint16_t segment;
                 uint64_t base;
-                char scope[];
+                char scope[1];
             }*_elem;
         };
         size_t _size_left;

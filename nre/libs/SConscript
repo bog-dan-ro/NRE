@@ -2,4 +2,3 @@
 
 Import('env')
 env.SConscript(Glob('*/SConscript'), 'env')
-env.SConscript('libseoul/nre/SConscript', 'env')

@@ -1,4 +1,5 @@
 # -*- Mode: Python -*-
 
 Import('env')
-env.SConscript(Glob('*/SConscript'), 'env')
+scripts = [s for s in Glob('*/SConscript') if 'console/SConscript' not in str(s)]
+env.SConscript(scripts, 'env')

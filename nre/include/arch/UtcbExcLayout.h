@@ -88,7 +88,7 @@ public:
             Descriptor ld, tr, gd, id;
             uint64_t tsc_val, tsc_off;
         };
-        word_t words[];
+        word_t words[0];
     };
 
     void clear() {

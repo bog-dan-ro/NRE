@@ -33,11 +33,11 @@ fi
 
 # target dependend values
 if [ "$NRE_TARGET" = "x86_32" ]; then
-    cross="i686-pc-nulnova"
+    cross="i686-pc-nulnova-"
     gdb=$NRE_GDB_X86_32
     export QEMU_FLAGS="-cpu phenom $QEMU_FLAGS"
 elif [ "$NRE_TARGET" = "x86_64" ]; then
-    cross="x86_64-pc-nulnova"
+    cross=""  # Use vanilla toolchain
     gdb=$NRE_GDB_X86_64
 else
     echo 'Please define $NRE_TARGET to x86_32 or x86_64!' >&2
@@ -45,7 +45,7 @@ else
 fi
 
 # don't change anything below!
-crossdir="/opt/nre-cross-$NRE_TARGET"
+crossdir="/usr/bin/"
 build="build/$NRE_TARGET-$NRE_BUILD"
 root=$(dirname $(readlink -f $0))
 kerndir="../kernel"
@@ -192,7 +192,7 @@ if $dobuild; then
             esac
             case $line in
                 +*|-*|U*)
-                    subname=`echo $line | sed -e 's/^.[[:xdigit:]]* //g'` 
+                    subname=`echo $line | sed -e 's/^.[[:xdigit:]]* //g'`
                     echo "\33[1mThe status of submodule $subname is not as expected ($substatus)."
                     echo "Maybe you want to do an 'git submodule update --init'?\33[0m"
                     ;;
@@ -205,7 +205,7 @@ if $dobuild; then
 
     if [ -d $novadir/build ]; then
         cd $novadir/build
-        
+
         # adjust build-flags depending on build-type
         if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
             if [ "$NRE_BUILD" != "debug" ]; then
@@ -226,7 +226,7 @@ if $dobuild; then
 
         # copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
         if [ "$NRE_TARGET" = "x86_64" ]; then
-            $crossdir/bin/$cross-objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+            objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
             cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor-elf64
         else
             cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
@@ -244,7 +244,7 @@ if [ "$binary" != "" ]; then
         exit 1
     fi
 fi
- 
+
 # run the specified command, if any
 case "$cmd" in
     clean)
@@ -283,24 +283,24 @@ case "$cmd" in
         ./$script --server -p --build-dir="$PWD/$build" --strip-rom
         ;;
     dis=*)
-        $crossdir/bin/$cross-objdump -SC $build/bin/apps/$binary | less
+        objdump -SC $build/bin/apps/$binary | less
         ;;
     elf=*)
-        $crossdir/bin/$cross-readelf -a $build/bin/apps/$binary | less
+        readelf -a $build/bin/apps/$binary | less
         ;;
     constr=*)
-    	./tools/listconstr.sh $crossdir $cross $build/bin/apps/$binary
+    	./tools/listconstr.sh "$crossdir" "$cross" $build/bin/apps/$binary
         ;;
     nm=*)
-        $crossdir/bin/$cross-nm -SC $build/bin/apps/$binary | sort | less
+        nm -SC $build/bin/apps/$binary | sort | less
         ;;
     straddr=*)
         echo "Strings containing '$script' in $binary:"
         # find base address of .rodata
-        base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/$binary | grep .rodata | \
+        base=`readelf -S $build/bin/apps/$binary | grep .rodata | \
             xargs | cut -d ' ' -f 5`
         # grep for matching lines, prepare for better use of awk and finally add offset to base
-        $crossdir/bin/$cross-readelf -p 4 $build/bin/apps/$binary | grep $script | \
+        readelf -p 4 $build/bin/apps/$binary | grep $script | \
             sed 's/^ *\[ *\([[:xdigit:]]*\)\] *\(.*\)$/0x\1 \2/' | \
             awk '{ printf("0x%x: %s %s %s %s %s %s\n",0x'$base' + strtonum($1),$2,$3,$4,$5,$6,$7) }'
         ;;
@@ -316,7 +316,7 @@ case "$cmd" in
                 x86_32) hyperbin=hypervisor ;;
                 x86_64) hyperbin=hypervisor-elf64 ;;
             esac
-            addr=`$crossdir/bin/$cross-readelf -S $build/bin/apps/$hyperbin | grep .text | \
+            addr=`readelf -S $build/bin/apps/$hyperbin | grep .text | \
                 xargs | cut -d ' ' -f 5`
             echo "add-symbol-file $build/bin/apps/$hyperbin 0x$addr" >> $tmp
         fi
@@ -335,8 +335,8 @@ case "$cmd" in
         ;;
     list)
         echo "Start of section .text:"
-        ls -1 $build/bin/apps | while read l; do	
-            $crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
+        ls -1 $build/bin/apps | while read l; do
+            readelf -S $build/bin/apps/$l | \
                 grep "\.text " | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
         done
         ;;

@@ -4,22 +4,28 @@ import sys, os
 
 target = os.environ.get('NRE_TARGET') or 'x86_64'
 if target == 'x86_32':
+    # x86_32 requires custom cross-compiler
     cross = 'i686-pc-nulnova'
+    crossdir = os.path.abspath('/usr/bin')  # Update path if using custom toolchain
 elif target == 'x86_64':
-    cross = 'x86_64-pc-nulnova'
+    # Use vanilla toolchain for x86_64
+    cross = ''  # No prefix needed
+    crossdir = os.path.abspath('/usr/bin')
 else:
     print("Please define NRE_TARGET to x86_32 or x86_64 first!")
     Exit(1)
 crossver = '4.8.1'
-crossdir = os.path.abspath('/opt/nre-cross-' + target)
 
 hostenv = Environment(
     ENV = os.environ,
     CXXFLAGS = '-Wall -Wextra -ansi -g'
 )
 env = Environment(
-    CXXFLAGS = '-Wall -Wextra -ansi -std=c++0x -msse2',
-    CFLAGS = '-Wall -Wextra -std=c99  -msse2',
+    CXXFLAGS = '-Wall -Wextra -ansi -std=c++0x -msse2'
+        + ' -D__nova__ -D__NOVA__ -Dnova'
+        + ' -D__GXX_MERGED_TYPEINFO_NAMES=0 -D__GXX_TYPEINFO_EQUALITY_INLINE=0',
+    CFLAGS = '-Wall -Wextra -std=c99 -msse2'
+        + ' -D__nova__ -D__NOVA__ -Dnova',
     # without "-z max-page-size=0x1000" ld produces really large binaries for x86_64, because it
     # aligns to 2MiB (not only in virtual memory, but also in the binary)
     LINKFLAGS = '-nostartfiles -Wl,--no-undefined -static -Wl,-static -static-libgcc'
@@ -31,23 +37,30 @@ env = Environment(
         'TERM' : os.environ['TERM']
    	},
     CPPPATH = '#include',
-    LD = cross + '-ld',
-    AS = cross + '-as',
-    AR = cross + '-ar',
-    RANLIB = cross + '-ranlib',
+    LD = (cross + '-ld') if cross else 'ld',
+    AS = (cross + '-as') if cross else 'as',
+    AR = (cross + '-ar') if cross else 'ar',
+    RANLIB = (cross + '-ranlib') if cross else 'ranlib',
 )
 
 compiler = os.environ.get('NRE_CC') or 'gcc'
 if compiler == 'gcc':
-    env.Replace(
-        CXX = cross + '-g++',
-        CC = cross + '-gcc'
-    )
+    # Use g++-14 explicitly, or fall back to cross-compiler for x86_32
+    if cross:
+        env.Replace(
+            CXX = cross + '-g++',
+            CC = cross + '-gcc'
+        )
+    else:
+        env.Replace(
+            CXX = 'g++-14',
+            CC = 'gcc-14'
+        )
 else:
     env.Replace(
         CXX = 'clang++',
         CC = 'clang',
-        LINK = cross + '-gcc',
+        LINK = (cross + '-gcc') if cross else 'gcc-14',
     )
     if target == 'x86_64':
         hosttriple = 'x86_64-pc-linux-gnu'
@@ -77,7 +90,7 @@ else:
 if target == 'x86_64':
     env.Append(CXXFLAGS = ' -mcmodel=large')
     env.Append(CFLAGS = ' -mcmodel=large')
-    env.Append(LINKFLAGS = ' -mcmodel=large')
+    env.Append(LINKFLAGS = ' -mcmodel=large -Wl,--no-relax')
 builddir = 'build/' + target + '-' + btype
 
 guestenv = Environment(
@@ -122,7 +135,7 @@ def NREProgram(env, target, source, libs = [], cpppath = [], fixedaddr = False, 
     myenv['LINKFLAGS'] += ' -Wl,-T,toolchain/' + ldscript + '.ld'
     prog = myenv.Program(
         target, [myenv['LIBPATH'] + '/crt0.o'] + source,
-        LIBS = ['stdc++','supc++'] + libs,
+        LIBS = ['stdc++','supc++','g'] + libs,
         LIBPATH = [myenv['LIBPATH'], myenv['SYSLIBPATH']]
     )
     myenv.Depends(prog, myenv['LIBPATH'] + '/crt0.o')
