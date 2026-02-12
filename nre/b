@@ -203,8 +203,8 @@ if $dobuild; then
     # build userland
     scons $opts || exit 1
 
-    if [ -d $novadir/build ]; then
-        cd $novadir/build
+    if [ -d $novadir ]; then
+        cd $novadir
 
         # adjust build-flags depending on build-type
         if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
@@ -226,10 +226,10 @@ if $dobuild; then
 
         # copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
         if [ "$NRE_TARGET" = "x86_64" ]; then
-            objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
-            cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor-elf64
+            objcopy -O elf32-i386 build-x86_64/x86_64-nova $root/$build/bin/apps/hypervisor
+            cp build-x86_64/x86_64-nova $root/$build/bin/apps/hypervisor-elf64
         else
-            cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+            cp build-x86_64/x86_64-nova $root/$build/bin/apps/hypervisor
         fi
         cd $root
     else
