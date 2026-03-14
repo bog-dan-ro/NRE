@@ -523,6 +523,10 @@ MAX_RELEASE_CHECK_RATE   default: 4095 unless not HAVE_MMAP
 
 #include "dlmalloc-config.h"
 
+/* Suppress warnings for this vendored library */
+#pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #ifndef DLMALLOC_EXPORT
 #define DLMALLOC_EXPORT extern
 #endif

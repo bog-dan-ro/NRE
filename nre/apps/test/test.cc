@@ -114,10 +114,13 @@ static void view0(void*) {
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void tick_thread(void*) {
     timevalue_t uptime, unixts;
     int i = 0;
     auto &ser = Serial::get();
+#pragma GCC diagnostic pop
     while(1) {
         timer->wait_for(Hip::get().freq_tsc * 1000);
         timer->get_time(uptime, unixts);
@@ -133,7 +136,10 @@ static void tick_thread(void*) {
 }
 
 int main() {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
     auto &ser = Serial::get();
+#pragma GCC diagnostic pop
 
 #if 0
     try {

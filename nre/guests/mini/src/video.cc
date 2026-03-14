@@ -16,7 +16,7 @@
 
 #include "video.h"
 
-char* const Video::SCREEN = (char* const)0xB8000;
+char* const Video::SCREEN = (char*)0xB8000;
 int Video::col = 0;
 int Video::row = 0;
 int Video::color = BLACK << 4 | WHITE;

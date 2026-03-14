@@ -161,9 +161,12 @@ class Utcb : public UtcbBase {
             const int tcount = typed * 2;
             word_t *utbackup = &item(untyped_start());
             word_t *tbackup = &item(typed_start());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
             memcpy(utbackup - utcount, this, utcount * sizeof(word_t));
             utbackup[-(utcount + 1)] = utcount;
             memcpy(tbackup, get_top(this) - tcount, tcount * sizeof(word_t));
+#pragma GCC diagnostic pop
             tbackup[tcount] = tcount;
             add_untyped(utcount + 1);
             add_typed(tcount + 1);
@@ -182,8 +185,11 @@ class Utcb : public UtcbBase {
             const word_t *tbackup = &item(typed_start());
             const int utcount = utbackup[0];
             const int tcount = tbackup[-1];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
             memcpy(this, utbackup + 1, utcount * sizeof(word_t));
             memcpy(get_top(this) - tcount, tbackup - tcount - 1, tcount * sizeof(word_t));
+#pragma GCC diagnostic pop
             add_untyped(-(utcount + 1));
             add_typed(-(tcount + 1));
         }

@@ -134,6 +134,7 @@ void Child::join_thread(void *ptr, capsel_t sm) {
 }
 
 void Child::term_thread(void *ptr, uintptr_t stack, uintptr_t utcb) {
+    (void)utcb;
     ScopedLock<UserSm> guard(&_sm);
     SchedEntity *se = get_thread_by_id(ptr);
     if(!se)
